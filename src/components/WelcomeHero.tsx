@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Gift, Heart, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const WelcomeHero = () => {
   return (
@@ -13,9 +14,11 @@ const WelcomeHero = () => {
             <Gift className="h-8 w-8 text-primary" />
             <span className="text-2xl font-poppins font-bold text-foreground">Gifty</span>
           </div>
-          <Button variant="outline" size="sm" className="font-poppins">
-            I Get Invite Link
-          </Button>
+          <Link to="/guest/1">
+            <Button variant="outline" size="sm" className="font-poppins">
+              I Get Invite Link
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -33,12 +36,16 @@ const WelcomeHero = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="font-poppins font-medium px-8 py-3 text-lg">
-              I Wan Create Registry
-            </Button>
-            <Button variant="outline" size="lg" className="font-poppins font-medium px-8 py-3 text-lg">
-              See How E Work
-            </Button>
+            <Link to="/auth">
+              <Button size="lg" className="font-poppins font-medium px-8 py-3 text-lg">
+                I Wan Create Registry
+              </Button>
+            </Link>
+            <Link to="/guest/1">
+              <Button variant="outline" size="lg" className="font-poppins font-medium px-8 py-3 text-lg">
+                See How E Work
+              </Button>
+            </Link>
           </div>
         </div>
 
