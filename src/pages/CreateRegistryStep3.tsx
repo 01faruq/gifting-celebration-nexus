@@ -4,14 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gift, ArrowLeft, Share, Copy, Check, Calendar, Package } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { saveRegistry } from "@/utils/registryStorage";
+import { useToast } from "@/hooks/use-toast";
 
 const CreateRegistryStep3 = () => {
   const [eventData, setEventData] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const shareableLink = "https://gifty.app/guest/adunni-25th-birthday";
+  const shareableLink = "https://gifty.app/guest/preview";
 
   useEffect(() => {
     const step1Data = localStorage.getItem("registry-step1");
@@ -25,21 +29,81 @@ const CreateRegistryStep3 = () => {
     try {
       await navigator.clipboard.writeText(shareableLink);
       setCopied(true);
+      toast({
+        title: "Link copied!",
+        description: "Share link copied to clipboard",
+      });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.log("Failed to copy link");
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the link manually",
+        variant: "destructive",
+      });
     }
   };
 
   const publishRegistry = () => {
-    // Clear temp data and redirect to dashboard
-    localStorage.removeItem("registry-step1");
-    localStorage.removeItem("registry-step2");
-    navigate("/dashboard");
+    if (!eventData || items.length === 0) {
+      toast({
+        title: "Error",
+        description: "Missing registry data. Please go back and complete all steps.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPublishing(true);
+
+    try {
+      // Get current user
+      const userData = localStorage.getItem("gifty-user");
+      const user = userData ? JSON.parse(userData) : { name: "Unknown User" };
+
+      // Save registry
+      const newRegistry = saveRegistry({
+        title: eventData.title,
+        eventType: eventData.eventType,
+        eventDate: eventData.eventDate,
+        message: eventData.message || "",
+        items: items.map(item => ({
+          ...item,
+          id: item.id || Date.now().toString() + Math.random()
+        })),
+        userId: user.email || user.name
+      });
+
+      // Clear temp data
+      localStorage.removeItem("registry-step1");
+      localStorage.removeItem("registry-step2");
+
+      toast({
+        title: "Registry Published! 🎉",
+        description: "Your registry is now live and ready to share!",
+      });
+
+      // Navigate to the new registry view
+      navigate(`/registry/${newRegistry.id}`);
+    } catch (error) {
+      toast({
+        title: "Error Publishing Registry",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setIsPublishing(false);
+    }
   };
 
   if (!eventData) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <Gift className="h-16 w-16 text-muted mx-auto mb-4" />
+          <h3 className="text-xl font-poppins font-semibold mb-2">Loading...</h3>
+          <p className="text-body">Preparing your registry preview</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -210,8 +274,9 @@ const CreateRegistryStep3 = () => {
               onClick={publishRegistry} 
               className="font-poppins px-8" 
               size="lg"
+              disabled={isPublishing}
             >
-              Publish Registry & Go Live! 🎉
+              {isPublishing ? "Publishing..." : "Publish Registry & Go Live! 🎉"}
             </Button>
             <p className="text-sm text-hint mt-2">
               You can always edit your registry later from the dashboard
