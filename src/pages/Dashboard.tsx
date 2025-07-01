@@ -9,7 +9,7 @@ import { useEffect } from "react";
 
 const Dashboard = () => {
   const { user, profile, signOut, loading } = useAuth();
-  const { data: registries = [], isLoading } = useRegistries();
+  const { registries, loading: registriesLoading } = useRegistries();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const Dashboard = () => {
     return totalItems > 0 ? Math.round((totalReserved / totalItems) * 100) : 0;
   };
 
-  if (loading || isLoading) {
+  if (loading || registriesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
         <div className="text-center">
