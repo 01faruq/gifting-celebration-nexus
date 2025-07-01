@@ -33,17 +33,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log("AuthProvider - initializing");
     
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log("Initial session:", session, "error:", error);
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log("Auth timeout - forcing loading to false");
+      setLoading(false);
+    }, 5000);
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Initial session:", session, "error:", error);
+        
+        if (error) {
+          console.error("Session error:", error);
+          setLoading(false);
+          clearTimeout(timeoutId);
+          return;
+        }
+
+        setSession(session)
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+        
+        clearTimeout(timeoutId);
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        setLoading(false);
+        clearTimeout(timeoutId);
       }
-    })
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -61,7 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, [])
 
   const fetchProfile = async (userId: string) => {
