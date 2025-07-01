@@ -2,30 +2,51 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gift, Plus, Share, Eye, Calendar, Users } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { getRegistries } from "@/utils/registryStorage";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRegistries } from "@/hooks/useRegistries";
+import { useEffect } from "react";
 
 const Dashboard = () => {
-  const [user, setUser] = useState<any>(null);
-  const [registries, setRegistries] = useState<any[]>([]);
+  const { user, profile, signOut, loading } = useAuth();
+  const { data: registries = [], isLoading } = useRegistries();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = localStorage.getItem("gifty-user");
-    if (userData) {
-      setUser(JSON.parse(userData));
+    if (!loading && !user) {
+      navigate("/");
     }
+  }, [user, loading, navigate]);
 
-    // Load real registries
-    const userRegistries = getRegistries();
-    setRegistries(userRegistries);
-  }, []);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   const calculateProgress = (registry: any) => {
     if (!registry.items || registry.items.length === 0) return 0;
-    const reservedCount = registry.items.filter((item: any) => item.reservedBy).length;
-    return Math.round((reservedCount / registry.items.length) * 100);
+    const totalReserved = registry.items.reduce((sum: number, item: any) => {
+      const reserved = item.reservations?.reduce((itemSum: number, res: any) => itemSum + res.quantity_reserved, 0) || 0;
+      return sum + Math.min(reserved, item.quantity);
+    }, 0);
+    const totalItems = registry.items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    return totalItems > 0 ? Math.round((totalReserved / totalItems) * 100) : 0;
   };
+
+  if (loading || isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-body">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -38,10 +59,10 @@ const Dashboard = () => {
               <span className="text-2xl font-poppins font-bold text-foreground">Gifty</span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-body">Welcome, {user?.name || "User"}!</span>
-              <Link to="/">
-                <Button variant="outline" size="sm">Sign Out</Button>
-              </Link>
+              <span className="text-body">Welcome, {profile?.full_name || user?.email || "User"}!</span>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
@@ -66,8 +87,11 @@ const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {registries.map((registry) => {
             const progress = calculateProgress(registry);
-            const reservedCount = registry.items?.filter((item: any) => item.reservedBy).length || 0;
-            const totalItems = registry.items?.length || 0;
+            const totalReserved = registry.items?.reduce((sum: number, item: any) => {
+              const reserved = item.reservations?.reduce((itemSum: number, res: any) => itemSum + res.quantity_reserved, 0) || 0;
+              return sum + Math.min(reserved, item.quantity);
+            }, 0) || 0;
+            const totalItems = registry.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
 
             return (
               <Card key={registry.id} className="hover:shadow-lg transition-shadow duration-300">
@@ -75,7 +99,7 @@ const Dashboard = () => {
                   <CardTitle className="flex items-center justify-between">
                     <span className="text-lg">{registry.title}</span>
                     <span className="text-xs px-2 py-1 rounded-full bg-secondary/20 text-primary">
-                      Active
+                      {registry.is_active ? "Active" : "Inactive"}
                     </span>
                   </CardTitle>
                 </CardHeader>
@@ -83,11 +107,11 @@ const Dashboard = () => {
                   <div className="flex items-center space-x-4 text-sm text-body">
                     <div className="flex items-center space-x-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{new Date(registry.eventDate).toLocaleDateString()}</span>
+                      <span>{new Date(registry.event_date).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Users className="h-4 w-4" />
-                      <span>{registry.eventType}</span>
+                      <span>{registry.event_type}</span>
                     </div>
                   </div>
 
@@ -95,7 +119,7 @@ const Dashboard = () => {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-hint">Progress</span>
                       <span className="text-sm font-medium text-primary">
-                        {reservedCount} of {totalItems} items reserved
+                        {totalReserved} of {totalItems} items reserved
                       </span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-3">
