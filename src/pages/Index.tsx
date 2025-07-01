@@ -8,13 +8,18 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  console.log("Index component - user:", user, "loading:", loading);
+
   useEffect(() => {
+    console.log("Index useEffect - user:", user, "loading:", loading);
     if (!loading && user) {
+      console.log("Redirecting to dashboard");
       navigate("/dashboard");
     }
   }, [user, loading, navigate]);
 
   if (loading) {
+    console.log("Index - showing loading screen");
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
         <div className="text-center">
@@ -25,6 +30,7 @@ const Index = () => {
     );
   }
 
+  console.log("Index - showing WelcomeHero");
   return <WelcomeHero />;
 };
 

@@ -31,19 +31,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log("AuthProvider - initializing");
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("Initial session:", session, "error:", error);
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
+      } else {
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state change:", event, session);
         setSession(session)
         setUser(session?.user ?? null)
         
@@ -51,8 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await fetchProfile(session.user.id)
         } else {
           setProfile(null)
+          setLoading(false)
         }
-        setLoading(false)
       }
     )
 
@@ -61,25 +66,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
-      if (error) throw error
-      setProfile(data)
+      console.log("Profile fetch result:", data, "error:", error);
+      if (error) {
+        console.error("Profile fetch error:", error);
+        // Don't throw error, just continue without profile
+        setProfile(null);
+      } else {
+        setProfile(data);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error)
+      setProfile(null);
+    } finally {
+      setLoading(false);
     }
   }
 
   const signIn = async (email: string, password: string) => {
+    console.log("Signing in with email:", email);
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    if (error) {
+      console.error("Sign in error:", error);
+      throw error;
+    }
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    console.log("Signing up with email:", email);
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -89,12 +109,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       },
     })
-    if (error) throw error
+    if (error) {
+      console.error("Sign up error:", error);
+      throw error;
+    }
   }
 
   const signOut = async () => {
+    console.log("Signing out");
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    if (error) {
+      console.error("Sign out error:", error);
+      throw error;
+    }
   }
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -121,6 +148,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     updateProfile,
   }
+
+  console.log("AuthProvider rendering with:", { user: !!user, loading, hasProfile: !!profile });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
