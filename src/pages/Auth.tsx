@@ -4,26 +4,51 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gift, ArrowLeft } from "lucide-react";
+import { Gift, ArrowLeft, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: ""
   });
   const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Fake authentication - just navigate to dashboard
-    localStorage.setItem("gifty-user", JSON.stringify({
-      name: formData.name || "Adunni Okafor",
-      email: formData.email || "adunni@example.com"
-    }));
-    navigate("/dashboard");
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        await signIn(formData.email, formData.password);
+        toast({
+          title: "Welcome back!",
+          description: "You've been signed in successfully.",
+        });
+      } else {
+        await signUp(formData.email, formData.password, formData.name);
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
+        });
+      }
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Authentication failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,6 +87,7 @@ const Auth = () => {
                     placeholder="Your full name"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required={!isLogin}
                   />
                 </div>
               )}
@@ -74,6 +100,7 @@ const Auth = () => {
                   placeholder="your.email@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required
                 />
               </div>
 
@@ -85,10 +112,13 @@ const Auth = () => {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  required
+                  minLength={6}
                 />
               </div>
 
-              <Button type="submit" className="w-full font-poppins">
+              <Button type="submit" className="w-full font-poppins" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLogin ? "Sign In" : "Create Account"}
               </Button>
             </form>
@@ -97,6 +127,7 @@ const Auth = () => {
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-primary hover:text-primary/80 text-sm"
+                disabled={loading}
               >
                 {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
