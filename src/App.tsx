@@ -16,6 +16,7 @@ import CreateRegistryStep3 from "./pages/CreateRegistryStep3";
 import GuestLanding from "./pages/GuestLanding";
 import GuestBrowse from "./pages/GuestBrowse";
 import GuestThankYou from "./pages/GuestThankYou";
+import GuestPreview from "./components/GuestPreview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/guest/:registryId" element={<GuestLanding />} />
               <Route path="/guest/:registryId/browse" element={<GuestBrowse />} />
               <Route path="/guest/:registryId/thank-you" element={<GuestThankYou />} />
+              <Route path="/demo" element={<GuestPreview />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

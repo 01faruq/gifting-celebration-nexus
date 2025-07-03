@@ -14,9 +14,9 @@ const WelcomeHero = () => {
             <Gift className="h-8 w-8 text-primary" />
             <span className="text-2xl font-poppins font-bold text-foreground">Gifty</span>
           </div>
-          <Link to="/guest/1">
+          <Link to="/auth">
             <Button variant="outline" size="sm" className="font-poppins">
-              I Get Invite Link
+              Sign In
             </Button>
           </Link>
         </div>
@@ -30,20 +30,20 @@ const WelcomeHero = () => {
               Celebrate <span className="text-primary">intentionally</span>
             </h1>
             <p className="text-xl md:text-2xl text-body max-w-3xl mx-auto">
-              No more 10 rice cookers or 5 blenders. Pick what you really need, 
-              let your people reserve what they go bring come.
+              No more duplicate gifts. Create your registry, let guests reserve what they'll bring, 
+              and get exactly what you need for your special day.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/auth">
               <Button size="lg" className="font-poppins font-medium px-8 py-3 text-lg">
-                I Wan Create Registry
+                Create Your Registry
               </Button>
             </Link>
-            <Link to="/guest/1">
+            <Link to="/demo">
               <Button variant="outline" size="lg" className="font-poppins font-medium px-8 py-3 text-lg">
-                See How E Work
+                See How It Works
               </Button>
             </Link>
           </div>
@@ -57,7 +57,7 @@ const WelcomeHero = () => {
             </div>
             <h3 className="text-xl font-poppins font-semibold">Share Your Wishes</h3>
             <p className="text-body">
-              Tell your people wetin you really need. No more guessing game for gifts.
+              Tell your guests exactly what you need. No more guessing games for gifts.
             </p>
           </Card>
 
@@ -67,7 +67,7 @@ const WelcomeHero = () => {
             </div>
             <h3 className="text-xl font-poppins font-semibold">Let Them Reserve</h3>
             <p className="text-body">
-              Your guests fit see what others don pick. No duplicate gifts again!
+              Your guests can see what others have chosen. No duplicate gifts ever again!
             </p>
           </Card>
 
@@ -77,19 +77,19 @@ const WelcomeHero = () => {
             </div>
             <h3 className="text-xl font-poppins font-semibold">Celebrate Properly</h3>
             <p className="text-body">
-              Get exactly what you need. Your celebration go be more meaningful.
+              Get exactly what you need. Make your celebration more meaningful and organized.
             </p>
           </Card>
         </div>
 
         {/* Sample Registry Preview */}
-        <div className="mt-20">
+        <div className="mt-20" id="preview">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-poppins font-semibold text-foreground mb-4">
-              See How E Look Like
+              See How It Works
             </h2>
             <p className="text-lg text-body">
-              This na how your registry go show for your people
+              This is how your registry will appear to your guests
             </p>
           </div>
 
@@ -100,7 +100,7 @@ const WelcomeHero = () => {
                   Adunni's 25th Birthday
                 </h3>
                 <p className="text-body mt-2">
-                  "Thank you for making my day special! Pick something wey you go bring come."
+                  "Thank you for making my day special! Please choose something you'd like to bring."
                 </p>
               </div>
 
@@ -120,7 +120,7 @@ const WelcomeHero = () => {
                     <h4 className="font-medium text-foreground">Kitchen Blender</h4>
                     <p className="text-sm text-hint">For my morning smoothies</p>
                   </div>
-                  <Button size="sm" className="font-poppins">I Go Bring This</Button>
+                  <Button size="sm" className="font-poppins">Reserve This</Button>
                 </div>
 
                 <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
