@@ -1,7 +1,52 @@
 
 import { useState, useEffect } from 'react'
-import { supabase, Registry, RegistryItem, Reservation } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
+
+interface Registry {
+  id: string
+  user_id: string
+  title: string
+  event_type: string
+  event_date: string
+  message?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  items?: RegistryItem[]
+}
+
+interface RegistryItem {
+  id: string
+  registry_id: string
+  name: string
+  description?: string
+  quantity: number
+  image_url?: string
+  created_at: string
+  updated_at: string
+  reservations?: Reservation[]
+}
+
+interface Reservation {
+  id: string
+  registry_item_id: string
+  guest_name: string
+  guest_email?: string
+  guest_phone?: string
+  quantity_reserved: number
+  message?: string
+  created_at: string
+}
+
+interface Profile {
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+  created_at: string
+  updated_at: string
+}
 
 export const useRegistries = () => {
   const { user } = useAuth()
@@ -111,7 +156,6 @@ export const useRegistry = (id: string) => {
         .from('registries')
         .select(`
           *,
-          profiles(*),
           items:registry_items(
             *,
             reservations(*)
