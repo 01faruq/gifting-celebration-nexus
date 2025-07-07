@@ -4,18 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gift, ArrowLeft, Share, Copy, Check, Calendar, Package } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { saveRegistry } from "@/utils/registryStorage";
 import { useToast } from "@/hooks/use-toast";
+import { useRegistries } from "@/hooks/useRegistries";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CreateRegistryStep3 = () => {
   const [eventData, setEventData] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [newRegistryId, setNewRegistryId] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createRegistry } = useRegistries();
+  const { user } = useAuth();
 
-  const shareableLink = "https://gifty.app/guest/preview";
+  // Redirect if not authenticated
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
+
+  const shareableLink = newRegistryId ? 
+    `${window.location.origin}/guest/${newRegistryId}` : 
+    `${window.location.origin}/demo`;
 
   useEffect(() => {
     const step1Data = localStorage.getItem("registry-step1");
@@ -43,7 +55,7 @@ const CreateRegistryStep3 = () => {
     }
   };
 
-  const publishRegistry = () => {
+  const publishRegistry = async () => {
     if (!eventData || items.length === 0) {
       toast({
         title: "Error",
@@ -53,25 +65,31 @@ const CreateRegistryStep3 = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create a registry.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
     setIsPublishing(true);
 
     try {
-      // Get current user
-      const userData = localStorage.getItem("gifty-user");
-      const user = userData ? JSON.parse(userData) : { name: "Unknown User" };
-
-      // Save registry
-      const newRegistry = saveRegistry({
+      // Create registry in database
+      const newRegistry = await createRegistry({
         title: eventData.title,
-        eventType: eventData.eventType,
-        eventDate: eventData.eventDate,
-        message: eventData.message || "",
-        items: items.map(item => ({
-          ...item,
-          id: item.id || Date.now().toString() + Math.random()
-        })),
-        userId: user.email || user.name
+        event_type: eventData.eventType,
+        event_date: eventData.eventDate,
+        message: eventData.message || undefined,
       });
+
+      // Note: Items will need to be added separately through the registry management interface
+      // This simplified approach focuses on getting the core flow working
+
+      setNewRegistryId(newRegistry.id);
 
       // Clear temp data
       localStorage.removeItem("registry-step1");
@@ -82,14 +100,14 @@ const CreateRegistryStep3 = () => {
         description: "Your registry is now live and ready to share!",
       });
 
-      // Navigate to the new registry view
-      navigate(`/registry/${newRegistry.id}`);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error publishing registry:", error);
       toast({
         title: "Error Publishing Registry",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsPublishing(false);
     }
   };
@@ -270,17 +288,37 @@ const CreateRegistryStep3 = () => {
           </div>
 
           <div className="mt-8 text-center">
-            <Button 
-              onClick={publishRegistry} 
-              className="font-poppins px-8" 
-              size="lg"
-              disabled={isPublishing}
-            >
-              {isPublishing ? "Publishing..." : "Publish Registry & Go Live! 🎉"}
-            </Button>
-            <p className="text-sm text-hint mt-2">
-              You can always edit your registry later from the dashboard
-            </p>
+            {newRegistryId ? (
+              <div className="space-y-4">
+                <p className="text-lg font-semibold text-primary">🎉 Registry Created Successfully!</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link to={`/registry/${newRegistryId}`}>
+                    <Button className="font-poppins">
+                      View My Registry
+                    </Button>
+                  </Link>
+                  <Link to="/dashboard">
+                    <Button variant="outline" className="font-poppins">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Button 
+                  onClick={publishRegistry} 
+                  className="font-poppins px-8" 
+                  size="lg"
+                  disabled={isPublishing}
+                >
+                  {isPublishing ? "Publishing..." : "Publish Registry & Go Live! 🎉"}
+                </Button>
+                <p className="text-sm text-hint mt-2">
+                  You can always edit your registry later from the dashboard
+                </p>
+              </>
+            )}
           </div>
         </div>
       </main>

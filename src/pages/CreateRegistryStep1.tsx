@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gift, ArrowLeft, Calendar } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CreateRegistryStep1 = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,13 @@ const CreateRegistryStep1 = () => {
     message: ""
   });
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect if not authenticated
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

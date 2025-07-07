@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gift, ArrowLeft, Plus, Trash2, Package } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Item {
   id: string;
@@ -22,30 +23,20 @@ const CreateRegistryStep2 = () => {
     quantity: 1
   });
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect if not authenticated
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
 
   useEffect(() => {
-    // Pre-populate with sample items for demo
-    const sampleItems: Item[] = [
-      {
-        id: "1",
-        name: "Kitchen Blender",
-        description: "For my morning smoothies",
-        quantity: 1
-      },
-      {
-        id: "2", 
-        name: "Bed Sheets Set",
-        description: "White or cream color preferred",
-        quantity: 2
-      },
-      {
-        id: "3",
-        name: "Rice Cooker",
-        description: "Medium size for family use",
-        quantity: 1
-      }
-    ];
-    setItems(sampleItems);
+    // Load saved items if any
+    const savedItems = localStorage.getItem("registry-step2");
+    if (savedItems) {
+      setItems(JSON.parse(savedItems));
+    }
   }, []);
 
   const addItem = () => {
